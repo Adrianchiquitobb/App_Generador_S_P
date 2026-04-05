@@ -7,7 +7,7 @@ import math
 import time
 
 # --- CONFIGURACIÓN DE LA PÁGINA ---
-st.set_page_config(page_title="Creador de Pistas | Paso 2", page_icon="🧩", layout="centered")
+st.set_page_config(page_title="Creador de Pistas", page_icon="🧩", layout="centered")
 
 # --- SEGURIDAD DE LA API ---
 try:
@@ -24,7 +24,7 @@ if "archivo_final_excel" not in st.session_state:
     st.session_state.archivo_final_excel = None
 
 # --- INTERFAZ VISUAL ---
-st.title("🧩 Paso 2: Generador de Pistas y Sinónimos")
+st.title("🧩 Generador de Pistas y Sinónimos")
 st.markdown("""
 Carga el archivo Excel. 
 La IA analizará cada palabra para encontrar un sinónimo y redactar una pista creativa de máximo 60 caracteres.
