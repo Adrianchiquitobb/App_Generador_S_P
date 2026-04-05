@@ -27,7 +27,7 @@ if "archivo_final_excel" not in st.session_state:
 st.title("🧩 Generador de Pistas y Sinónimos")
 st.markdown("""
 Carga el archivo Excel. 
-La IA analizará cada palabra para encontrar un sinónimo y redactar una pista creativa de máximo 60 caracteres.
+La IA analizará cada palabra para encontrar un sinónimo y redactar una pista.
 """)
 st.divider()
 
