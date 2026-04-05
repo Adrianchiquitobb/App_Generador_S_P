@@ -122,7 +122,7 @@ if st.button("Generar Pistas y Sinónimos", type="primary", use_container_width=
                 df_final.to_excel(writer, index=False, sheet_name='Crucigrama Final')
             
             st.session_state.archivo_final_excel = {
-                "nombre": f"Crucigrama_Final_{archivo_excel.name}",
+                "nombre": f"Sinonimos_Pistas_{archivo_excel.name}",
                 "datos": buffer.getvalue()
             }
             
@@ -136,7 +136,7 @@ if st.button("Generar Pistas y Sinónimos", type="primary", use_container_width=
 if st.session_state.archivo_final_excel:
     st.divider()
     st.download_button(
-        label="📥 Descargar Excel Final (3 Columnas)",
+        label="📥 Descargar archivo final Excel",
         data=st.session_state.archivo_final_excel["datos"],
         file_name=st.session_state.archivo_final_excel["nombre"],
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
