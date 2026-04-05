@@ -26,7 +26,7 @@ if "archivo_final_excel" not in st.session_state:
 # --- INTERFAZ VISUAL ---
 st.title("🧩 Paso 2: Generador de Pistas y Sinónimos")
 st.markdown("""
-Carga el archivo Excel generado en el **Paso 1**. 
+Carga el archivo Excel. 
 La IA analizará cada palabra para encontrar un sinónimo y redactar una pista creativa de máximo 60 caracteres.
 """)
 st.divider()
@@ -35,12 +35,12 @@ archivo_excel = st.file_uploader(
     "Carga el listado base (Excel)", 
     type=["xlsx"], 
     accept_multiple_files=False,
-    help="Sube el archivo que descargaste de la App anterior."
+    help="Sube el archivo Excel."
 )
 
 if st.button("Generar Pistas y Sinónimos", type="primary", use_container_width=True):
     if not archivo_excel:
-        st.warning("⚠️ Por favor, carga el archivo Excel del Paso 1.")
+        st.warning("⚠️ Por favor, carga el archivo Excel.")
     else:
         st.session_state.archivo_final_excel = None
         
@@ -127,7 +127,7 @@ if st.button("Generar Pistas y Sinónimos", type="primary", use_container_width=
             }
             
             texto_estado.text("✅ ¡Archivo procesado con éxito!")
-            st.success("🎉 Tu base de datos para el crucigrama está lista.")
+            st.success("🎉 Tu base de datos está lista.")
 
         except Exception as e:
             st.error(f"Error crítico: {e}")
