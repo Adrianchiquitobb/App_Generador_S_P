@@ -7,7 +7,7 @@ import math
 import time
 
 # --- CONFIGURACIÓN DE LA PÁGINA ---
-st.set_page_config(page_title="Creador de Pistas", page_icon="🧩", layout="centered")
+st.set_page_config(page_title="Creador de Sinonimos y Pistas", page_icon="🧩", layout="centered")
 
 # --- SEGURIDAD DE LA API ---
 try:
