@@ -70,7 +70,7 @@ if st.button("Generar Pistas y Sinónimos", type="primary", use_container_width=
                 prompt = f"""
                 Actúa como un experto en crucigramas y lingüista.
                 Para cada palabra de la siguiente lista, genera:
-                1. Un SINÓNIMO común (si no existe o es muy forzado, usa "").
+                1. Un SINÓNIMO común EN MAYÚSCULAS (si no existe o es muy forzado, usa "").
                 2. Una PISTA creativa para un crucigrama (MÁXIMO 60 CARACTERES).
 
                 Devuelve ÚNICAMENTE un objeto JSON donde cada clave sea la palabra original y el valor sea otro objeto con 'sinonimo' y 'pista'.
@@ -95,7 +95,8 @@ if st.button("Generar Pistas y Sinónimos", type="primary", use_container_width=
                         info = datos_lote.get(palabra, {})
                         resultados_acumulados.append({
                             "Palabra": palabra,
-                            "Sinónimo": info.get("sinonimo", ""),
+                            # Conversión forzada a mayúsculas mediante Python para máxima seguridad
+                            "Sinónimo": str(info.get("sinonimo", "")).upper(),
                             "Pista de Crucigrama": info.get("pista", "")
                         })
                         
