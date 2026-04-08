@@ -34,7 +34,7 @@ La IA analizará cada palabra para encontrar un sinónimo y redactar una pista.
 st.info("💡 **Consejo:** Una vez que inicies el proceso, mantén esta pestaña abierta y no refresques la página para evitar perder tu archivo final.")
 st.divider()
 
-# ACTUALIZACIÓN: Se admiten múltiples extensiones de Excel
+# Se admiten múltiples extensiones de Excel
 archivo_excel = st.file_uploader(
     "Carga el listado base (Excel)", 
     type=["xlsx", "xls", "xlsm", "xlsb"], 
@@ -114,10 +114,10 @@ if st.button("Generar Pistas y Sinónimos", type="primary", use_container_width=
 
                 barra_progreso.progress(porcentaje)
                 
-                # Semáforo para respetar la cuota
+                # SEMÁFORO OPTIMIZADO: 3 segundos (El punto dulce)
                 if i < total_lotes - 1:
-                    texto_estado.text("Pausando 6 segundos para estabilizar la conexión...")
-                    time.sleep(6)
+                    texto_estado.text("Pausando 3 segundos para estabilizar la conexión...")
+                    time.sleep(3)
 
             # Generar el Excel final
             texto_estado.text("Construyendo archivo final...")
@@ -135,7 +135,7 @@ if st.button("Generar Pistas y Sinónimos", type="primary", use_container_width=
             st.session_state.proceso_terminado = True
             
             texto_estado.text("✅ ¡Archivo procesado con éxito!")
-            st.balloons() 
+            st.balloons() # Pequeño extra visual para avisar que terminó
 
         except Exception as e:
             st.error(f"Error crítico: {e}")
