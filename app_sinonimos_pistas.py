@@ -97,6 +97,7 @@ if st.button("Generar Pistas y Sinónimos", type="primary", use_container_width=
                     datos_lote = json.loads(texto_json)
                     
                     # Organizar datos y forzar MAYÚSCULAS desde Python
+                    # NOTA: Este bloque se mantiene activo para estructurar los datos correctamente.
                     for palabra in lote_actual:
                         info = datos_lote.get(palabra, {})
                         resultados_acumulados.append({
@@ -125,7 +126,12 @@ if st.button("Generar Pistas y Sinónimos", type="primary", use_container_width=
             
             buffer = io.BytesIO()
             with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
-                df_final.to_excel(writer, index=False, sheet_name='Crucigrama Final')
+                
+                # --- ACTUALIZACIÓN: LÍNEA ORIGINAL CONVERTIDA A COMENTARIO ---
+                # df_final.to_excel(writer, index=False, sheet_name='Crucigrama Final')
+                
+                # --- NUEVA LÍNEA: Se agrega 'header=False' para eliminar los encabezados ---
+                df_final.to_excel(writer, index=False, header=False, sheet_name='Crucigrama Final')
             
             # Guardar en memoria blindada
             st.session_state.archivo_final_excel = {
@@ -150,7 +156,7 @@ if st.session_state.get("proceso_terminado") and st.session_state.archivo_final_
     with st.container(border=True):
         st.markdown("### 📥 Archivo Final Disponible")
         st.download_button(
-            label="Descargar Excel Final (3 Columnas)",
+            label="Descargar Excel Final (Sin Encabezados)",
             data=st.session_state.archivo_final_excel["datos"],
             file_name=st.session_state.archivo_final_excel["nombre"],
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
