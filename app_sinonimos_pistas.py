@@ -11,7 +11,6 @@ st.set_page_config(page_title="Creador de Sinonimos y Pistas", page_icon="🧩",
 
 # --- SEGURIDAD DE LA API ---
 try:
-    # Recuerda configurar esta clave en los Secrets de Streamlit para esta App 3
     genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
 except KeyError:
     st.error("⚠️ Configura la clave API de Gemini en los Secrets de esta aplicación.")
@@ -46,15 +45,12 @@ if st.button("Generar Pistas y Sinónimos", type="primary", use_container_width=
     if not archivo_excel:
         st.warning("⚠️ Por favor, carga el archivo Excel.")
     else:
-        # Reiniciamos la memoria solo al presionar el botón explícitamente
         st.session_state.archivo_final_excel = None
         st.session_state.proceso_terminado = False
         
         try:
-            # Leer el Excel (Pandas detecta automáticamente el motor)
             df_entrada = pd.read_excel(archivo_excel)
             
-            # Validar que la columna existe
             columna_palabras = df_entrada.columns[0]
             lista_palabras = df_entrada[columna_palabras].astype(str).tolist()
             
@@ -62,7 +58,6 @@ if st.button("Generar Pistas y Sinónimos", type="primary", use_container_width=
             barra_progreso = st.progress(0)
             texto_estado = st.empty()
             
-            # Parámetros de seguridad para la cuota
             tamaño_lote = 20  
             total_lotes = math.ceil(len(lista_palabras) / tamaño_lote)
             resultados_acumulados = []
@@ -96,44 +91,37 @@ if st.button("Generar Pistas y Sinónimos", type="primary", use_container_width=
                     
                     datos_lote = json.loads(texto_json)
                     
-                    # Organizar datos y forzar MAYÚSCULAS desde Python
-                    # NOTA: Este bloque se mantiene activo para estructurar los datos correctamente.
+                    # ACTUALIZACIÓN RADICAL: Guardamos los datos como una simple lista (fila) sin nombres de diccionario
                     for palabra in lote_actual:
                         info = datos_lote.get(palabra, {})
-                        resultados_acumulados.append({
-                            "Palabra": palabra,
-                            "Sinónimo": str(info.get("sinonimo", "")).upper(),
-                            "Pista de Crucigrama": info.get("pista", "")
-                        })
+                        resultados_acumulados.append([
+                            palabra,
+                            str(info.get("sinonimo", "")).upper(),
+                            info.get("pista", "")
+                        ])
                         
                 except Exception as e_lote:
                     st.toast(f"⚠️ Error en lote {i+1}. Se dejarán vacíos. ({e_lote})")
                     for palabra in lote_actual:
-                        resultados_acumulados.append({
-                            "Palabra": palabra, "Sinónimo": "", "Pista de Crucigrama": ""
-                        })
+                        # Si falla, también agregamos una lista simple
+                        resultados_acumulados.append([palabra, "", ""])
 
                 barra_progreso.progress(porcentaje)
                 
-                # SEMÁFORO OPTIMIZADO: 3 segundos (El punto dulce)
                 if i < total_lotes - 1:
                     texto_estado.text("Pausando 3 segundos para estabilizar la conexión...")
                     time.sleep(3)
 
-            # Generar el Excel final
             texto_estado.text("Construyendo archivo final...")
+            
+            # Al no tener diccionarios, Pandas crea una tabla sin nombres de columnas
             df_final = pd.DataFrame(resultados_acumulados)
             
             buffer = io.BytesIO()
             with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
-                
-                # --- ACTUALIZACIÓN: LÍNEA ORIGINAL CONVERTIDA A COMENTARIO ---
-                # df_final.to_excel(writer, index=False, sheet_name='Crucigrama Final')
-                
-                # --- NUEVA LÍNEA: Se agrega 'header=False' para eliminar los encabezados ---
+                # El parámetro header=False ahora funcionará de manera garantizada
                 df_final.to_excel(writer, index=False, header=False, sheet_name='Crucigrama Final')
             
-            # Guardar en memoria blindada
             st.session_state.archivo_final_excel = {
                 "nombre": f"Sinonimos_Pistas_{archivo_excel.name}",
                 "datos": buffer.getvalue()
@@ -141,18 +129,16 @@ if st.button("Generar Pistas y Sinónimos", type="primary", use_container_width=
             st.session_state.proceso_terminado = True
             
             texto_estado.text("✅ ¡Archivo procesado con éxito!")
-            st.balloons() # Pequeño extra visual para avisar que terminó
+            st.balloons()
 
         except Exception as e:
             st.error(f"Error crítico: {e}")
 
 # --- CONTENEDOR DE DESCARGA BLINDADO ---
-# Se dibuja siempre que exista el archivo en memoria, sin importar si la página se refresca
 if st.session_state.get("proceso_terminado") and st.session_state.archivo_final_excel:
     st.divider()
     st.success("🎉 ¡Tu base de datos está lista y asegurada! Puedes descargarla a continuación.")
     
-    # El botón de descarga ahora está envuelto en un contenedor destacado
     with st.container(border=True):
         st.markdown("### 📥 Archivo Final Disponible")
         st.download_button(
