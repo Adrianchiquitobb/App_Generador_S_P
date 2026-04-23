@@ -25,7 +25,7 @@ if "proceso_terminado" not in st.session_state:
     st.session_state.proceso_terminado = False
 
 # --- INTERFAZ VISUAL ---
-st.title("🧩 Generador de Pistas y Sinónimos")
+st.title("🧩 Generador de Sinónimos, Pistas y Autodefinidos")
 st.markdown("""
 Carga tu archivo Excel con el listado de palabras. 
 La IA generará sinónimos, pistas estándar y pistas cortas para autodefinidos.
