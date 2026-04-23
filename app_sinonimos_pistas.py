@@ -28,9 +28,9 @@ if "proceso_terminado" not in st.session_state:
 st.title("🧩 Generador de Pistas y Sinónimos")
 st.markdown("""
 Carga tu archivo Excel con el listado de palabras. 
-La IA analizará cada palabra para encontrar un sinónimo y redactar una pista.
+La IA generará sinónimos, pistas estándar y pistas cortas para autodefinidos.
 """)
-st.info("💡 **Consejo:** Una vez que inicies el proceso, mantén esta pestaña abierta y no refresques la página para evitar perder tu archivo final.")
+st.info("💡 **Consejo:** Una vez que inicies el proceso, mantén esta pestaña abierta y no refresques la página.")
 st.divider()
 
 # Se admiten múltiples extensiones de Excel
@@ -68,14 +68,16 @@ if st.button("Generar Pistas y Sinónimos", type="primary", use_container_width=
                 
                 texto_estado.text(f"🧠 Creando contenido: Lote {i+1} de {total_lotes} ({porcentaje}%)...")
                 
+                # ACTUALIZACIÓN: Petición de 4ta columna (Autodefinidos)
                 prompt = f"""
                 Actúa como un experto en crucigramas y lingüista.
                 Para cada palabra de la siguiente lista, genera:
-                1. Un SINÓNIMO común EN MAYÚSCULAS (si no existe o es muy forzado, usa "").
-                2. Una PISTA creativa para un crucigrama (MÁXIMO 60 CARACTERES).
+                1. Un SINÓNIMO común EN MAYÚSCULAS (si no existe, usa "").
+                2. Una PISTA creativa estándar (MÁXIMO 60 CARACTERES).
+                3. Una PISTA PARA AUTODEFINIDO: Debe ser muy corta, idealmente entre 17 y 20 caracteres. No puede exceder los 20 caracteres.
 
-                Devuelve ÚNICAMENTE un objeto JSON donde cada clave sea la palabra original y el valor sea otro objeto con 'sinonimo' y 'pista'.
-                Ejemplo: {{"CIELO": {{"sinonimo": "FIRMAMENTO", "pista": "Espacio azul donde flotan las nubes"}}}}
+                Devuelve ÚNICAMENTE un objeto JSON donde cada clave sea la palabra original y el valor sea otro objeto con 'sinonimo', 'pista' y 'autodefinido'.
+                Ejemplo: {{"CIELO": {{"sinonimo": "FIRMAMENTO", "pista": "Espacio azul donde flotan las nubes", "autodefinido": "Bóveda azulada"}}}}
                 No incluyas explicaciones ni formato markdown.
 
                 Lista:
@@ -91,39 +93,39 @@ if st.button("Generar Pistas y Sinónimos", type="primary", use_container_width=
                     
                     datos_lote = json.loads(texto_json)
                     
-                    # ACTUALIZACIÓN RADICAL: Guardamos los datos como una simple lista (fila) sin nombres de diccionario
                     for palabra in lote_actual:
                         info = datos_lote.get(palabra, {})
+                        # ACTUALIZACIÓN: Agregamos el 4to elemento a la lista
                         resultados_acumulados.append([
                             palabra,
                             str(info.get("sinonimo", "")).upper(),
-                            info.get("pista", "")
+                            info.get("pista", ""),
+                            info.get("autodefinido", "") # Cuarta columna: Autodefinidos
                         ])
                         
                 except Exception as e_lote:
-                    st.toast(f"⚠️ Error en lote {i+1}. Se dejarán vacíos. ({e_lote})")
+                    st.toast(f"⚠️ Error en lote {i+1}. ({e_lote})")
                     for palabra in lote_actual:
-                        # Si falla, también agregamos una lista simple
-                        resultados_acumulados.append([palabra, "", ""])
+                        resultados_acumulados.append([palabra, "", "", ""])
 
                 barra_progreso.progress(porcentaje)
                 
                 if i < total_lotes - 1:
-                    texto_estado.text("Pausando 3 segundos para estabilizar la conexión...")
                     time.sleep(3)
 
             texto_estado.text("Construyendo archivo final...")
-            
-            # Al no tener diccionarios, Pandas crea una tabla sin nombres de columnas
             df_final = pd.DataFrame(resultados_acumulados)
             
             buffer = io.BytesIO()
             with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
-                # El parámetro header=False ahora funcionará de manera garantizada
                 df_final.to_excel(writer, index=False, header=False, sheet_name='Crucigrama Final')
             
+            # ACTUALIZACIÓN: Nombre de archivo con prefijo "P " y sin guiones bajos
+            nombre_base = archivo_excel.name.replace('_', ' ')
+            nombre_descarga = f"P {nombre_base}"
+
             st.session_state.archivo_final_excel = {
-                "nombre": f"Sinonimos_Pistas_{archivo_excel.name}",
+                "nombre": nombre_descarga,
                 "datos": buffer.getvalue()
             }
             st.session_state.proceso_terminado = True
@@ -134,15 +136,15 @@ if st.button("Generar Pistas y Sinónimos", type="primary", use_container_width=
         except Exception as e:
             st.error(f"Error crítico: {e}")
 
-# --- CONTENEDOR DE DESCARGA BLINDADO ---
+# --- CONTENEDOR DE DESCARGA ---
 if st.session_state.get("proceso_terminado") and st.session_state.archivo_final_excel:
     st.divider()
-    st.success("🎉 ¡Tu base de datos está lista y asegurada! Puedes descargarla a continuación.")
+    st.success("🎉 ¡Tu base de datos con pistas de autodefinidos está lista!")
     
     with st.container(border=True):
-        st.markdown("### 📥 Archivo Final Disponible")
+        st.markdown(f"### 📥 Archivo: {st.session_state.archivo_final_excel['nombre']}")
         st.download_button(
-            label="Descargar Excel Final (Sin Encabezados)",
+            label="Descargar Excel Final (4 Columnas)",
             data=st.session_state.archivo_final_excel["datos"],
             file_name=st.session_state.archivo_final_excel["nombre"],
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
