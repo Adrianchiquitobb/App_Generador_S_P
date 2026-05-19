@@ -41,6 +41,13 @@ archivo_excel = st.file_uploader(
     help="Sube tu archivo. Formatos compatibles: .xlsx, .xls, .xlsm, .xlsb"
 )
 
+# --- RECUADRO PARA ENFOQUE TEMÁTICO ---
+enfoque_tematico = st.text_input(
+    "Enfoque temático para las pistas (Opcional)", 
+    placeholder="Ej. Medicina, Cocina, Halloween, Historia, Deportes...",
+    help="La IA intentará adaptar el contexto de las pistas a este tema, solo si la palabra lo permite de forma lógica."
+)
+
 if st.button("Generar Pistas y Sinónimos", type="primary", use_container_width=True):
     if not archivo_excel:
         st.warning("⚠️ Por favor, carga el archivo Excel.")
@@ -68,11 +75,18 @@ if st.button("Generar Pistas y Sinónimos", type="primary", use_container_width=
                 
                 texto_estado.text(f"🧠 Creando contenido: Lote {i+1} de {total_lotes} ({porcentaje}%)...")
                 
-                # ACTUALIZACIÓN: Petición de 4ta columna (Autodefinidos)
+                # --- CONDICIONAMIENTO DE TEMA DINÁMICO ---
+                instruccion_tema = ""
+                if enfoque_tematico.strip():
+                    instruccion_tema = f"""
+                    CONTEXTO TEMÁTICO REQUERIDO: El crucigrama completo tratará sobre el tema: "{enfoque_tematico.strip()}". 
+                    Intenta orientar o relacionar el significado de las pistas (tanto la estándar como la de autodefinido) hacia este contexto temático, PERO SOLO si la palabra lo permite de forma coherente, natural y lógica. Si forzar la palabra dentro de este tema resulta absurdo, imposible o sin sentido, ignora el tema para esa palabra específica y genera una pista "normal"/genérica.
+                    """
+
                 prompt = f"""
-                Actúa como un experto en crucigramas y lingüista.
+                Actúa como un experto en crucigramas y lingüista.{instruccion_tema}
                 Para cada palabra de la siguiente lista, genera:
-                1. Un SINÓNIMO común EN MAYÚSCULAS (si no existe, usa "").
+                1. Un SINÓNIMO común (si no existe, usa "").
                 2. Una PISTA creativa estándar (MÁXIMO 60 CARACTERES).
                 3. Una PISTA PARA AUTODEFINIDO: Debe ser muy corta, idealmente entre 17 y 20 caracteres. No puede exceder los 20 caracteres.
 
@@ -95,18 +109,21 @@ if st.button("Generar Pistas y Sinónimos", type="primary", use_container_width=
                     
                     for palabra in lote_actual:
                         info = datos_lote.get(palabra, {})
-                        # ACTUALIZACIÓN: Agregamos el 4to elemento a la lista
+                        
+                        # --- ACTUALIZACIÓN: REORDENAMIENTO DE COLUMNAS ---
+                        # Nuevo orden: Palabra, Pista, Autodefinido, Sinónimo
                         resultados_acumulados.append([
-                            palabra,
-                            str(info.get("sinonimo", "")).upper(),
+                            palabra.capitalize(),
                             info.get("pista", ""),
-                            info.get("autodefinido", "") # Cuarta columna: Autodefinidos
+                            info.get("autodefinido", ""),
+                            str(info.get("sinonimo", "")).capitalize()
                         ])
                         
                 except Exception as e_lote:
                     st.toast(f"⚠️ Error en lote {i+1}. ({e_lote})")
                     for palabra in lote_actual:
-                        resultados_acumulados.append([palabra, "", "", ""])
+                        # Se mantiene la estructura de 4 columnas vacías en caso de error
+                        resultados_acumulados.append([palabra.capitalize(), "", "", ""])
 
                 barra_progreso.progress(porcentaje)
                 
@@ -118,9 +135,9 @@ if st.button("Generar Pistas y Sinónimos", type="primary", use_container_width=
             
             buffer = io.BytesIO()
             with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
+                # Se mantiene header=False
                 df_final.to_excel(writer, index=False, header=False, sheet_name='Crucigrama Final')
             
-            # ACTUALIZACIÓN: Nombre de archivo con prefijo "P " y sin guiones bajos
             nombre_base = archivo_excel.name.replace('_', ' ')
             nombre_descarga = f"P {nombre_base}"
 
